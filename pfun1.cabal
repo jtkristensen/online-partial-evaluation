@@ -26,7 +26,7 @@ source-repository head
 library
   exposed-modules:
       Interpretation
-      PartialEvaluation
+      OnlinePartialEvaluation
       Syntax
   other-modules:
       Paths_pfun1

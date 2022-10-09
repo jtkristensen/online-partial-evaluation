@@ -23,7 +23,7 @@ data Operation
 data Value
   = BooleanValue Bool
   | IntegerValue Integer
-  deriving Eq
+  deriving (Eq, Show)
 
 -- Abbreviations.
 type Name      = String
