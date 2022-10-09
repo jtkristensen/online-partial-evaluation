@@ -22,13 +22,6 @@ evaluate (definitions, mainExpression) = eval mainExpression
            Just v -> return v
            _      -> error $ "unbound variable " ++ x
 
-    eval (Apply f arguments) =
-      case lookup f definitions of
-        Just (parameters, body) ->
-          do environment <- zip parameters <$> mapM eval arguments
-             local (const environment) $ eval body
-        _ -> error $ "unbound function name " ++ f
-
     eval (Builtin operation arguments) =
       do parameters <- mapM eval arguments
          return $ primitive operation parameters
@@ -37,11 +30,18 @@ evaluate (definitions, mainExpression) = eval mainExpression
       do b <- eval condition
          eval $ if b == BooleanValue True then yes else no
 
-    primitive :: Operation -> [Value] -> Value
-    primitive operation args =
-      case (operation, args) of
-        (Equality,       [u             , v             ]) -> BooleanValue $ u == v
-        (Addition,       [IntegerValue m, IntegerValue n]) -> IntegerValue $ m  + n
-        (Subtraction,    [IntegerValue m, IntegerValue n]) -> IntegerValue $ m  - n
-        (Multiplication, [IntegerValue m, IntegerValue n]) -> IntegerValue $ m  * n
-        _                                                  -> error "invalid operation"
+    eval (Apply f arguments) =
+      case lookup f definitions of
+        Just (parameters, body) ->
+          do environment <- zip parameters <$> mapM eval arguments
+             local (const environment) $ eval body
+        _ -> error $ "unbound function name " ++ f
+
+primitive :: Operation -> [Value] -> Value
+primitive operation args =
+  case (operation, args) of
+    (Equality,       [u             , v             ]) -> BooleanValue $ u == v
+    (Addition,       [IntegerValue m, IntegerValue n]) -> IntegerValue $ m  + n
+    (Subtraction,    [IntegerValue m, IntegerValue n]) -> IntegerValue $ m  - n
+    (Multiplication, [IntegerValue m, IntegerValue n]) -> IntegerValue $ m  * n
+    _                                                  -> error "invalid operation"

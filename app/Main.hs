@@ -2,7 +2,8 @@ module Main where
 
 import Prelude hiding (exp)
 import Syntax
-import Interpretation
+import Interpretation          (runProgram)
+import OnlinePartialEvaluation (runPartialProgram)
 
 dec, suc :: Name -> Expression
 dec x = Builtin Subtraction [Variable x, integer 1]
@@ -11,6 +12,7 @@ suc x = Builtin Addition    [Variable x, integer 1]
 integer :: Integer -> Expression
 integer = Constant . IntegerValue
 
+add, mul, exp :: FunctionDefinition
 add =
   ("add", (["m", "n"],
      If (Builtin Equality [Variable "m", integer 0])
