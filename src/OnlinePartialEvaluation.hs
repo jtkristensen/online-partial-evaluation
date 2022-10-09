@@ -16,8 +16,8 @@ hash :: Show a => a -> String
 hash = ('$':) . show -- quick and dirty hash function {^o^}!
 
 residualProgram :: Environment -> (Program -> Program)
-residualProgram env (defs, expr) = residual
-  where (residual, _, _) = runRWS (partiallyEvaluate expr) env defs
+residualProgram environment (definitions, main) = residual
+  where (residual, _, _) = runRWS (partiallyEvaluate main) environment definitions
 
 partiallyEvaluate :: Expression -> Runtime Program
 partiallyEvaluate expression =
