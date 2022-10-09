@@ -35,14 +35,13 @@ exp =
 main :: IO ()
 main =
   do print "-----"
-     print $ p_n
+     print $ result $ n $ x p
      print "-----"
-     print $ p_x
+     print $ result $ x $ n p
+     print "-----"
+     print $ result q
   where
-    p_xn = ([add, mul, exp], Apply "exp" $ [Variable "x", Variable "n"])
-    x    = residualProgram [("x", IntegerValue 3)]
-    n    = residualProgram [("n", IntegerValue 4)]
-    p_n  = x p_xn
-    p_x  = n p_xn
-    p    = x p_n
-    p'   = n p_x
+    p = ([add, mul, exp], Apply "exp" $ [Variable "x", Variable "n"])
+    q = ([add, mul, exp], Apply "exp" $ [integer   3 , integer   4 ])
+    x = residualProgram [("x", IntegerValue 3)]
+    n = residualProgram [("n", IntegerValue 4)]

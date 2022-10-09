@@ -49,8 +49,8 @@ partiallyEvaluate expression =
 
     -- The hard part:
     peval (Apply f arguments) =
-      do definitions <- get
-         case lookup f definitions of
+      do definitionF <- lookup f <$> get
+         case definitionF of
            Just (parameters, body) ->
              do let (isStatic, isDynamic)  = (isCanonical . snd, not . isStatic)
                 environment  <- zip parameters <$> mapM peval arguments
@@ -58,11 +58,13 @@ partiallyEvaluate expression =
                 if     all isStatic environment
                   then local (const static) $ peval body
                   else
-                  do let dynamic = filter isDynamic environment
-                     let g = f ++ hash static
-                     when (isNothing $ lookup g definitions) $
-                       do body' <- local (const static) $ peval body
-                          put $ (g, (fst <$> dynamic, body')) : definitions
+                  do let g       = f ++ hash static
+                     let dynamic = filter isDynamic environment
+                     definitionG <- lookup g <$> get
+                     when (isNothing $ definitionG) $
+                       do modify $ (:) (g, undefined) -- placeholder !
+                          body' <- local (const static) $ peval body
+                          modify $ (:) (g, (fst <$> dynamic, body')) . filter ((/=g) . fst)
                      return $ Apply g (snd <$> dynamic)
            _ -> error $ "unbound function name " ++ f
 
