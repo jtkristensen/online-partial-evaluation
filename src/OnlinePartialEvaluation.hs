@@ -59,9 +59,9 @@ partiallyEvaluate expression =
                   then using environment $ peval body
                   else do
                     let (static, dynamic) = partition isStatic environment
-                    let g       = f ++ hash static
+                    let g = f ++ hash static
                     definitionG <- lookup g <$> get
-                    when (isNothing $ definitionG) $
+                    when (isNothing definitionG) $
                       do modify $ (:) (g, undefined)                -- future function name.
                          body' <- using static $ peval body         -- future function body.
                          modify $ filter $ (/=g) . fst              -- clean up.
