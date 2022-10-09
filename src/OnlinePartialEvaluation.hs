@@ -53,16 +53,18 @@ partiallyEvaluate expression =
          case definitionF of
            Just (parameters, body) ->
              do environment <- zip parameters <$> mapM peval arguments
-                let (static, dynamic) = partition (isCanonical . snd) environment
-                let run               = const . fmap (second valuate)
-                if     null dynamic -- all is static
-                  then local (run static) $ peval body
+                let isStatic = isCanonical . snd
+                let using    = local . const . fmap (second valuate)
+                if     all isStatic environment
+                  then using environment $ peval body
                   else do
+                    let (static, dynamic) = partition isStatic environment
                     let g       = f ++ hash static
                     definitionG <- lookup g <$> get
                     when (isNothing $ definitionG) $
-                      do modify $ (:) (g, undefined) -- placeholder !
-                         body' <- local (run static) $ peval body
-                         modify $ (:) (g, (fst <$> dynamic, body')) . filter ((/=g) . fst)
+                      do modify $ (:) (g, undefined)                -- future function name.
+                         body' <- using static $ peval body         -- future function body.
+                         modify $ filter $ (/=g) . fst              -- clean up.
+                         modify $ (:) (g, (fst <$> dynamic, body')) -- define g.
                     return $ Apply g (snd <$> dynamic)
            _ -> error $ "unbound function name " ++ f
