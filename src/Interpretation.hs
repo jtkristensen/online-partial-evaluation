@@ -26,7 +26,7 @@ evaluate (definitions, mainExpression) = eval mainExpression
       case lookup f definitions of
         Just (parameters, body) ->
           do environment <- zip parameters <$> mapM eval arguments
-             local (environment++) $ eval body
+             local (const environment) $ eval body
         _ -> error $ "unbound function name " ++ f
 
     eval (Builtin operation arguments) =

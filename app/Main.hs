@@ -1,5 +1,6 @@
 module Main where
 
+import Prelude hiding (exp)
 import Syntax
 import Interpretation
 
@@ -16,7 +17,18 @@ add =
         (Variable "n")
         (Apply "add" [dec "m", suc "n"])))
 
+mul =
+  ("mul", (["m", "n"],
+     If (Builtin Equality [Variable "m", integer 0])
+        (integer 0)
+        (Apply "add" [Variable "n", Apply "mul" [dec "m", Variable "n"]])))
+
+exp =
+  ("exp", (["x", "n"],
+     If (Builtin Equality [Variable "n", integer 0])
+        (integer 1)
+        (Apply "mul" [Variable "x", Apply "exp" [Variable "x", dec "n"]])))
 
 main :: IO ()
 main =
-  print $ runProgram $ ([add], Apply "add" $ [integer 2, integer 2])
+  print $ runProgram $ ([add, mul, exp], Apply "exp" $ [integer 3, integer 4])
