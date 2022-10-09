@@ -2,17 +2,18 @@
 module OnlinePartialEvaluation where
 
 import Syntax
-import Interpretation (primitive)
-import Control.Monad.RWS
-import Data.Bifunctor
-import Data.Maybe
+import Interpretation    (primitive)
+import Control.Monad.RWS (RWS, ask, get, modify, local, when, runRWS)
+import Data.Bifunctor    (second)
+import Data.Maybe        (isNothing)
+import Data.List         (partition)
 
-type Environment = [(Name, Value)]
+type Binding     = (Name, Value)
+type Environment = [Binding]
 type Runtime     = RWS Environment () [FunctionDefinition]
 
--- Todo, better hash function {^o^}!
 hash :: Show a => a -> String
-hash = ('$':) . show
+hash = ('$':) . show -- quick and dirty hash function {^o^}!
 
 residualProgram :: Environment -> (Program -> Program)
 residualProgram env (defs, expr) = residual
@@ -47,24 +48,21 @@ partiallyEvaluate expression =
            then peval $ if valuate b == BooleanValue True then yes else no
            else If <$> pure b <*> peval yes <*> peval no
 
-    -- The hard part:
     peval (Apply f arguments) =
       do definitionF <- lookup f <$> get
          case definitionF of
            Just (parameters, body) ->
-             do let (isStatic, isDynamic)  = (isCanonical . snd, not . isStatic)
-                environment  <- zip parameters <$> mapM peval arguments
-                let static    = second valuate <$> filter isStatic  environment
-                if     all isStatic environment
-                  then local (const static) $ peval body
-                  else
-                  do let g       = f ++ hash static
-                     let dynamic = filter isDynamic environment
-                     definitionG <- lookup g <$> get
-                     when (isNothing $ definitionG) $
-                       do modify $ (:) (g, undefined) -- placeholder !
-                          body' <- local (const static) $ peval body
-                          modify $ (:) (g, (fst <$> dynamic, body')) . filter ((/=g) . fst)
-                     return $ Apply g (snd <$> dynamic)
+             do environment <- zip parameters <$> mapM peval arguments
+                let (static, dynamic) = partition (isCanonical . snd) environment
+                let run               = const . fmap (second valuate)
+                if     null dynamic -- all is static
+                  then local (run static) $ peval body
+                  else do
+                    let g       = f ++ hash static
+                    definitionG <- lookup g <$> get
+                    when (isNothing $ definitionG) $
+                      do modify $ (:) (g, undefined) -- placeholder !
+                         body' <- local (run static) $ peval body
+                         modify $ (:) (g, (fst <$> dynamic, body')) . filter ((/=g) . fst)
+                    return $ Apply g (snd <$> dynamic)
            _ -> error $ "unbound function name " ++ f
-

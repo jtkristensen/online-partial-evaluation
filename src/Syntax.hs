@@ -36,17 +36,17 @@ type Condition = Expression
 
 class Canonical c where
   canonical   :: Value -> c
-  valuate      :: c -> Value
+  valuate     :: c -> Value
   isCanonical :: c -> Bool
 
 instance Canonical Value where
   canonical   = id
-  valuate      = id
+  valuate     = id
   isCanonical = const True
 
 instance Canonical Expression where
   canonical                = Constant
-  valuate      (Constant v) = v
-  valuate      _            = error "not canonical"
+  valuate     (Constant v) = v
+  valuate     _            = error "valuation of non-canonical expressions"
   isCanonical (Constant _) = True
   isCanonical _            = False
