@@ -13,12 +13,14 @@ data Expression
   | Apply    Name      [Expression]
   | Builtin  Operation [Expression]
   | If Condition Expression Expression
+  deriving Show
 
 data Operation
   = Equality
   | Addition
   | Subtraction
   | Multiplication
+  deriving Show
 
 data Value
   = BooleanValue Bool

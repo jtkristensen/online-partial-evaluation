@@ -7,8 +7,8 @@ import Control.Monad.Reader
 type Environment = [(Name, Value)]
 type Runtime     = Reader Environment
 
-runProgram :: Program -> Value
-runProgram program = runReader (evaluate program) []
+result :: Program -> Value
+result program = runReader (evaluate program) []
 
 evaluate :: Program -> Runtime Value
 evaluate (definitions, mainExpression) = eval mainExpression

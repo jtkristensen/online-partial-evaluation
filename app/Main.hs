@@ -2,8 +2,8 @@ module Main where
 
 import Prelude hiding (exp)
 import Syntax
-import Interpretation          (runProgram)
-import OnlinePartialEvaluation (runPartialProgram)
+import Interpretation          (result)
+import OnlinePartialEvaluation (residualProgram)
 
 dec, suc :: Name -> Expression
 dec x = Builtin Subtraction [Variable x, integer 1]
@@ -31,6 +31,18 @@ exp =
         (integer 1)
         (Apply "mul" [Variable "x", Apply "exp" [Variable "x", dec "n"]])))
 
+
 main :: IO ()
 main =
-  print $ runProgram $ ([add, mul, exp], Apply "exp" $ [integer 3, integer 4])
+  do print "-----"
+     print $ p_n
+     print "-----"
+     print $ p_x
+  where
+    p_xn = ([add, mul, exp], Apply "exp" $ [Variable "x", Variable "n"])
+    x    = residualProgram [("x", IntegerValue 3)]
+    n    = residualProgram [("n", IntegerValue 4)]
+    p_n  = x p_xn
+    p_x  = n p_xn
+    p    = x p_n
+    p'   = n p_x
