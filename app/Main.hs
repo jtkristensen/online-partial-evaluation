@@ -40,8 +40,72 @@ main =
      print $ result $ x $ n p
      print "-----"
      print $ result q
+     print "===== Origin ========"
+     putProgram $ n p
   where
     p = ([add, mul, exp], Apply "exp" $ [Variable "x", Variable "n"])
     q = ([add, mul, exp], Apply "exp" $ [integer   3 , integer   4 ])
     x = residualProgram [("x", IntegerValue 3)]
     n = residualProgram [("n", IntegerValue 4)]
+
+putProgram :: Program -> IO ()
+putProgram p =
+  do mapM_ putDef (fst p)
+     putExpression (snd p)
+     putStrLn ""
+
+putDef :: FunctionDefinition -> IO ()
+putDef (f, (args, body)) =
+  do putStr $ f ++ " "
+     mapM_ (\x -> putStr $ x ++ " ") args
+     putStr "=\n  "
+     putExpression body
+     putStrLn ""
+
+putExpression :: Expression -> IO ()
+putExpression (Constant v) = putValue v
+putExpression (Variable x) = putStr x
+putExpression (Apply  f es) =
+  do putStr f
+     case es of
+       [] -> putStr "()"
+       _  ->
+         do putStr "("
+            mapM_ (\e1 -> putExpression e1 >> putStr ", ") (init es)
+            putExpression (last es)
+            putStr ")"
+putExpression (Builtin Equality [e1, e2]) =
+  do parens e1
+     putStr " == "
+     parens e2
+putExpression (Builtin Addition [e1, e2]) =
+  do parens e1
+     putStr " + "
+     parens e2
+putExpression (Builtin Subtraction [e1, e2]) =
+  do parens e1
+     putStr " - "
+     parens e2
+putExpression (Builtin Multiplication [e1, e2]) =
+  do parens e1
+     putStr " * "
+     parens e2
+putExpression (Builtin _ _) =
+  putStr "<error>"
+putExpression (If e1 e2 e3) =
+  do putStr "if "
+     putExpression e1
+     putStr " then "
+     putExpression e2
+     putStr " else "
+     putExpression e3
+
+parens :: Expression -> IO ()
+parens e =
+  do putStr "("
+     putExpression e
+     putStr ")"
+
+putValue :: Value -> IO ()
+putValue (BooleanValue b) = putStr (show b)
+putValue (IntegerValue n) = putStr (show n)
