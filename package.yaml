@@ -20,8 +20,8 @@ extra-source-files:
 description:         Please see the README on GitHub at <https://github.com/githubuser/pfun1#readme>
 
 dependencies:
-- base >= 4.7   && < 5
-- mtl  >= 2.2.2 && < 3
+- base
+- mtl
 
 ghc-options:
 - -Wall
